@@ -8,3 +8,8 @@ Setup Project On Visual Studio Code:
 4. virtualenv venv
 5. source venv/bin/activate
 6. Run the Python file using the Play button. 
+
+
+After making changes to .proto file run the following and change the protofile in the last argument:
+
+python -m grpc_tools.protoc -I./protos --python_out=. --pyi_out=. --grpc_python_out=. ./protos/warehouse.proto

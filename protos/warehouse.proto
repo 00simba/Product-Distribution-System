@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service WarehouseService {
+  rpc warehouseLocation(Empty) returns (Location) {}
+}
+
+message Empty {
+
+}
+
+message Location {
+    repeated Tuple coordinates = 1;
+
+    message Tuple {
+        string x = 1;
+        string y = 2;
+    }
+}
