@@ -1,0 +1,13 @@
+# unit tests - use unittest or pytest 
+  check_proximity
+  decrypt_order
+  allocate_warehouse
+
+# integration testing - test entire flow
+  simulate communication between gRPC services
+    - WarehouseService
+    - OrderService
+
+# simulated load testing - process multiple order concurrently
+  ensure system can handle multiple warehouse and vehicle interactions
+    - using threading and mutexes
