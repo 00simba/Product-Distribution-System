@@ -8,9 +8,6 @@ import order_pb2_grpc
 from google.protobuf import empty_pb2
 
 def main():
-   # Create a list of delivery vehicles
-   vehicles = [DeliveryTruck(vehicle_id=i) for i in range(1, 4)]  # 3 vehicles for example
-
    with grpc.insecure_channel('localhost:50052') as channel:
       warehouse_stub = warehouse_pb2_grpc.WarehouseServiceStub(channel)
       order_stub = order_pb2_grpc.OrderServiceStub(channel)
