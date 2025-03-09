@@ -50,14 +50,19 @@ class OrderServicer(order_pb2_grpc.OrderServiceServicer):
         return {"order_id": order_id, "product_id": product_id, "quantity": quantity, "delivery_address": delivery_address}
 
     def allocate_warehouse(self, order):
-        # Check if any warehouse can fulfill the order (simplified logic for now)
+        closest_warehouse = None
+        min_distance = float('inf')  # Start with an infinitely large distance
+
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
                 values = line.split()
                 # Simple logic: if warehouse coordinates match the delivery address, assign the order
-                if self.check_proximity(order['delivery_address'], values):
-                    return values
-        return None
+                distance = self.check_proximity(order['delivery_address'], values)
+                if distance is not None and distance < min_distance:
+                    closest_warehouse = values
+                    min_distance = distance
+
+        return closest_warehouse
 
     def check_proximity(self, delivery_address, warehouse_coordinates):
         # Calculate Euclidean distance between delivery address and warehouse coordinates
@@ -65,10 +70,9 @@ class OrderServicer(order_pb2_grpc.OrderServiceServicer):
         x2, y2 = map(int, warehouse_coordinates)
         
         distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-        # Define a threshold distance for proximity (e.g., 5 units)
-        if distance <= 5:
-            return True
-        return False
+        threshold = 10  # Assume the delivery address is within 10 units of the warehouse
+        
+        return distance if distance <= threshold else None
 
 
 def serve():
