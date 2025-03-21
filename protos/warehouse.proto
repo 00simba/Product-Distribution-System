@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 service WarehouseService {
-  rpc warehouseLocation(Empty) returns (Location) {}
+  rpc warehouseInformation(Empty) returns (Location) {}
 }
 
 message Empty {
@@ -9,10 +9,12 @@ message Empty {
 }
 
 message Location {
-    repeated Tuple coordinates = 1;
+    repeated Tuple warehouseInfo = 1;
 
     message Tuple {
-        string x = 1;
-        string y = 2;
+        string id = 1;
+        string x = 2;
+        string y = 3;
+        string capacity = 4;
     }
 }

@@ -7,14 +7,14 @@ from concurrent import futures
 import logging
 
 class WareHouseServicer(warehouse_pb2_grpc.WarehouseServiceServicer):
-    def warehouseLocation(self, request, context):
-        coordinates = []
+    def warehouseInformation(self, request, context):
+        warehouseInfo = []
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
                 values = line.split()
-                coordinates.append(warehouse_pb2.Location.Tuple(x=values[0], y=values[1]))
+                warehouseInfo.append(warehouse_pb2.Location.Tuple(id=values[0], x=values[1], y=values[2], capacity=values[3]))
 
-        return warehouse_pb2.Location(coordinates=coordinates)
+        return warehouse_pb2.Location(warehouseInfo=warehouseInfo)
 
 class OrderServicer(order_pb2_grpc.OrderServiceServicer):
     def orderInformation(self, request, context):

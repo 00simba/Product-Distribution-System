@@ -34,8 +34,8 @@ class WarehouseServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.warehouseLocation = channel.unary_unary(
-                '/WarehouseService/warehouseLocation',
+        self.warehouseInformation = channel.unary_unary(
+                '/WarehouseService/warehouseInformation',
                 request_serializer=warehouse__pb2.Empty.SerializeToString,
                 response_deserializer=warehouse__pb2.Location.FromString,
                 _registered_method=True)
@@ -44,7 +44,7 @@ class WarehouseServiceStub(object):
 class WarehouseServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def warehouseLocation(self, request, context):
+    def warehouseInformation(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -53,8 +53,8 @@ class WarehouseServiceServicer(object):
 
 def add_WarehouseServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'warehouseLocation': grpc.unary_unary_rpc_method_handler(
-                    servicer.warehouseLocation,
+            'warehouseInformation': grpc.unary_unary_rpc_method_handler(
+                    servicer.warehouseInformation,
                     request_deserializer=warehouse__pb2.Empty.FromString,
                     response_serializer=warehouse__pb2.Location.SerializeToString,
             ),
@@ -70,7 +70,7 @@ class WarehouseService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def warehouseLocation(request,
+    def warehouseInformation(request,
             target,
             options=(),
             channel_credentials=None,
@@ -83,7 +83,7 @@ class WarehouseService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/WarehouseService/warehouseLocation',
+            '/WarehouseService/warehouseInformation',
             warehouse__pb2.Empty.SerializeToString,
             warehouse__pb2.Location.FromString,
             options,
