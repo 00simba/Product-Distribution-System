@@ -39,6 +39,8 @@ def process_order(id, x, y, quantity):
    distances = calculate_distance(x, y)
    print(distances)
 
+   curr_quantity = int(quantity)
+
    for distance in distances:
       truck = trucks[distance[0] - 1]
       if not (truck.is_active):
@@ -47,9 +49,15 @@ def process_order(id, x, y, quantity):
 
          #carry out delivery
 
-         time.sleep(int(quantity))
+         order_chunk = 1
 
-         print(f"Order {id} completed")
+         while curr_quantity // 20 != 0:
+            print(f"order {id} - truck {truck.id} - chunck {order_chunk}: delivery time {curr_quantity//20} days")
+            time.sleep(int(curr_quantity)//20)
+            order_chunk += 1
+            curr_quantity -= 20
+
+         print(f"order {id} completed")
 
          truck.is_active = False
 
