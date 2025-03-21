@@ -39,9 +39,10 @@ def process_order(id, x, y, quantity):
    distances = calculate_distance(x, y)
    print(distances)
 
-   for index, distance in enumerate(distances):
+   for distance in distances:
       truck = trucks[distance[0] - 1]
       if not (truck.is_active):
+         
          truck.is_active = True
 
          #carry out delivery
@@ -53,7 +54,6 @@ def process_order(id, x, y, quantity):
          truck.is_active = False
 
          break
-
 
 
 def main():
@@ -77,10 +77,6 @@ if __name__ == '__main__':
    
    main()
 
-   threads = list()
-
    with concurrent.futures.ThreadPoolExecutor() as executor:
       futures = [executor.submit(process_order, order.id, order.x, order.y, order.quantity) for order in orders]
-      
-      #for i, future in enumerate(concurrent.futures.as_completed(futures)):
-      #   print(f"Number of order processed: {i + 1}")
+   
