@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+service OrderService {
+  rpc orderInformation(OrderEmpty) returns (OrderInformation) {}
+}
+
+message OrderEmpty {
+
+}
+
+message OrderInformation {
+    repeated Tuple orderInfo = 1;
+
+    message Tuple {
+        string x = 1;
+        string y = 2;
+        string quantity = 3;
+    }
+}
