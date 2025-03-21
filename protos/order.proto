@@ -12,8 +12,9 @@ message OrderInformation {
     repeated Tuple orderInfo = 1;
 
     message Tuple {
-        string x = 1;
-        string y = 2;
-        string quantity = 3;
+        string id = 1;
+        string x = 2;
+        string y = 3;
+        string quantity = 4;
     }
 }

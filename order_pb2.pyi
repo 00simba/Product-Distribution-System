@@ -12,14 +12,16 @@ class OrderEmpty(_message.Message):
 class OrderInformation(_message.Message):
     __slots__ = ("orderInfo",)
     class Tuple(_message.Message):
-        __slots__ = ("x", "y", "quantity")
+        __slots__ = ("id", "x", "y", "quantity")
+        ID_FIELD_NUMBER: _ClassVar[int]
         X_FIELD_NUMBER: _ClassVar[int]
         Y_FIELD_NUMBER: _ClassVar[int]
         QUANTITY_FIELD_NUMBER: _ClassVar[int]
+        id: str
         x: str
         y: str
         quantity: str
-        def __init__(self, x: _Optional[str] = ..., y: _Optional[str] = ..., quantity: _Optional[str] = ...) -> None: ...
+        def __init__(self, id: _Optional[str] = ..., x: _Optional[str] = ..., y: _Optional[str] = ..., quantity: _Optional[str] = ...) -> None: ...
     ORDERINFO_FIELD_NUMBER: _ClassVar[int]
     orderInfo: _containers.RepeatedCompositeFieldContainer[OrderInformation.Tuple]
     def __init__(self, orderInfo: _Optional[_Iterable[_Union[OrderInformation.Tuple, _Mapping]]] = ...) -> None: ...

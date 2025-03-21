@@ -6,9 +6,9 @@ import warehouse_pb2
 import warehouse_pb2_grpc
 import order_pb2
 import order_pb2_grpc
-from google.protobuf import empty_pb2
 import math
-import threading 
+import time
+import concurrent.futures
 
 warehouses = []
 orders = []
@@ -19,11 +19,9 @@ def calculate_distance(order_x, order_y):
    # distance formula d = sqrt((x2 - x1)^2 + (y2 - y1)^2)
 
    distance = float('inf')
-
    distances = []
 
    for warehouse in warehouses:
-
          warehouse_x = float(warehouse.x)
          warehouse_y = float(warehouse.y)
 
@@ -36,10 +34,26 @@ def calculate_distance(order_x, order_y):
    distances.sort(key=lambda x:x[1])
    return distances
    
-def process_order(x, y, quantity):
+def process_order(id, x, y, quantity):
    
    distances = calculate_distance(x, y)
-   print(quantity)
+   print(distances)
+
+   for index, distance in enumerate(distances):
+      truck = trucks[distance[0] - 1]
+      if not (truck.is_active):
+         truck.is_active = True
+
+         #carry out delivery
+
+         time.sleep(int(quantity))
+
+         print(f"Order {id} completed")
+
+         truck.is_active = False
+
+         break
+
 
 
 def main():
@@ -56,7 +70,7 @@ def main():
       orderStub = order_pb2_grpc.OrderServiceStub(channel)
       response = orderStub.orderInformation(order_pb2.OrderEmpty())
       for order in response.orderInfo:
-         orders.append(Order(order.x, order.y, order.quantity))
+         orders.append(Order(order.id, order.x, order.y, order.quantity))
 
 
 if __name__ == '__main__':
@@ -65,10 +79,8 @@ if __name__ == '__main__':
 
    threads = list()
 
-   for order in orders:
-      x = threading.Thread(target=process_order, args=(order.x, order.y, order.quantity))
-      threads.append(x)
-      x.start()
-
-   for thread in threads:
-      thread.join()
+   with concurrent.futures.ThreadPoolExecutor() as executor:
+      futures = [executor.submit(process_order, order.id, order.x, order.y, order.quantity) for order in orders]
+      
+      #for i, future in enumerate(concurrent.futures.as_completed(futures)):
+      #   print(f"Number of order processed: {i + 1}")

@@ -22,7 +22,7 @@ class OrderServicer(order_pb2_grpc.OrderServiceServicer):
         with open("./files/orders.txt", "r") as f:
             for line in f:
                 values = line.split()
-                orderInfo.append(order_pb2.OrderInformation.Tuple(x=values[0], y=values[1], quantity=values[2]))
+                orderInfo.append(order_pb2.OrderInformation.Tuple(id=values[0], x=values[1], y=values[2], quantity=values[3]))
 
         return order_pb2.OrderInformation(orderInfo=orderInfo)
         

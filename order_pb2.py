@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0border.proto\"\x0c\n\nOrderEmpty\"o\n\x10OrderInformation\x12*\n\torderInfo\x18\x01 \x03(\x0b\x32\x17.OrderInformation.Tuple\x1a/\n\x05Tuple\x12\t\n\x01x\x18\x01 \x01(\t\x12\t\n\x01y\x18\x02 \x01(\t\x12\x10\n\x08quantity\x18\x03 \x01(\t2D\n\x0cOrderService\x12\x34\n\x10orderInformation\x12\x0b.OrderEmpty\x1a\x11.OrderInformation\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0border.proto\"\x0c\n\nOrderEmpty\"{\n\x10OrderInformation\x12*\n\torderInfo\x18\x01 \x03(\x0b\x32\x17.OrderInformation.Tuple\x1a;\n\x05Tuple\x12\n\n\x02id\x18\x01 \x01(\t\x12\t\n\x01x\x18\x02 \x01(\t\x12\t\n\x01y\x18\x03 \x01(\t\x12\x10\n\x08quantity\x18\x04 \x01(\t2D\n\x0cOrderService\x12\x34\n\x10orderInformation\x12\x0b.OrderEmpty\x1a\x11.OrderInformation\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,9 +34,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_ORDEREMPTY']._serialized_start=15
   _globals['_ORDEREMPTY']._serialized_end=27
   _globals['_ORDERINFORMATION']._serialized_start=29
-  _globals['_ORDERINFORMATION']._serialized_end=140
+  _globals['_ORDERINFORMATION']._serialized_end=152
   _globals['_ORDERINFORMATION_TUPLE']._serialized_start=93
-  _globals['_ORDERINFORMATION_TUPLE']._serialized_end=140
-  _globals['_ORDERSERVICE']._serialized_start=142
-  _globals['_ORDERSERVICE']._serialized_end=210
+  _globals['_ORDERINFORMATION_TUPLE']._serialized_end=152
+  _globals['_ORDERSERVICE']._serialized_start=154
+  _globals['_ORDERSERVICE']._serialized_end=222
 # @@protoc_insertion_point(module_scope)
