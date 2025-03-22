@@ -19,6 +19,7 @@ orders = []
 trucks = []
 stock_map = {}
 visited = set()
+unfulfilled = []
 
 def calculate_distance(order_x, order_y):
    
@@ -86,6 +87,16 @@ def process_order(order_id, x, y, quantity):
          truck = trucks[distance[0] - 1]
          warehouse_id = truck.id    
 
+         if check_stock(warehouse_id, quantity) == 0 and (order_id, warehouse_id) in visited:
+            for index, order in enumerate(orders):
+               if int(order.id) == int(order_id):
+                  orders.pop(index)
+                  unfulfilled.append(order)
+
+
+         if check_stock(warehouse_id, quantity) == 0:
+            visited.add((order_id, warehouse_id))
+
          if not (truck.is_active) and check_stock(warehouse_id, quantity):
 
             # carry out delivery
@@ -141,8 +152,8 @@ if __name__ == '__main__':
    # update warehouse stock quantity - truck.id maps to warehouse.id
    update_warehouse_stock(stock_map)
 
-   if len(orders):
-      for order in orders:
+   if len(unfulfilled):
+      for order in unfulfilled:
          print(f"order {order.id} not fulfilled")
    else:
       print("all orders fulfilled")
