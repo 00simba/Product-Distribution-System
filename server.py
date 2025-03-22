@@ -5,6 +5,8 @@ import order_pb2
 import order_pb2_grpc
 import updatestock_pb2
 import updatestock_pb2_grpc
+import getstock_pb2
+import getstock_pb2_grpc
 from concurrent import futures
 import logging
 
@@ -57,6 +59,17 @@ class UpdateStockServicer(updatestock_pb2_grpc.UpdateWarehouseServiceServicer):
                 f.write(" ".join(line) + "\n")
                 
         return updatestock_pb2.Response(message="successfully updated warehouse stock")
+    
+class GetStockServicer(getstock_pb2_grpc.GetWarehouseServiceServicer):
+
+    def getStock(self, request, context):
+        stockInfo = []
+        with open("./files/warehouse.txt", "r") as f:
+            for line in f:
+                values = line.split()
+                stockInfo.append(getstock_pb2.StockInformation.Tuple(warehouse_id=values[0], warehouse_stock=values[-1]))
+        
+        return getstock_pb2.StockInformation(stockInfo=stockInfo)
         
 
 def main():
@@ -64,6 +77,7 @@ def main():
     warehouse_pb2_grpc.add_WarehouseServiceServicer_to_server(WareHouseServicer(), server)
     order_pb2_grpc.add_OrderServiceServicer_to_server(OrderServicer(), server)
     updatestock_pb2_grpc.add_UpdateWarehouseServiceServicer_to_server(UpdateStockServicer(), server)
+    getstock_pb2_grpc.add_GetWarehouseServiceServicer_to_server(GetStockServicer(), server)
     print("Server Started")
     logging.basicConfig()
     server.add_insecure_port('[::]:50052')

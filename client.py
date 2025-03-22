@@ -8,6 +8,8 @@ import order_pb2
 import order_pb2_grpc
 import updatestock_pb2
 import updatestock_pb2_grpc
+import getstock_pb2
+import getstock_pb2_grpc
 import math
 import time
 import concurrent.futures
@@ -16,6 +18,7 @@ warehouses = []
 orders = []
 trucks = []
 stock_map = {}
+visited = set()
 
 def calculate_distance(order_x, order_y):
    
@@ -59,41 +62,56 @@ def update_warehouse_stock(stock_map):
       response = updateStub.updateStock(map_proto)
       print(f"response from server: {response.message}")
 
-   
-def process_order(id, x, y, quantity):
-   
-   distances = calculate_distance(x, y)
-   #print(distances)
+def check_stock(id, quantity):
 
+   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+      stockStub = getstock_pb2_grpc.GetWarehouseServiceStub(channel)
+      response = stockStub.getStock(getstock_pb2.StockEmpty())
+      for stock in response.stockInfo:
+         if int(id) == int(stock.warehouse_id) and int(quantity) <= int(stock.warehouse_stock):
+            return 1
+
+   return 0
+
+   
+def process_order(order_id, x, y, quantity):
+   
+   # each distance is (warehouse_id, distance) for that order
+   distances = calculate_distance(x, y)
    curr_quantity = int(quantity)
 
-   for distance in distances:
-      truck = trucks[distance[0] - 1]
-      if not (truck.is_active):
-         
-         truck.is_active = True
+   while len(orders):
+      for distance in distances:
 
-         # carry out delivery
+         truck = trucks[distance[0] - 1]
+         warehouse_id = truck.id    
 
-         order_chunk = 1
+         if not (truck.is_active) and check_stock(warehouse_id, quantity):
 
-         while curr_quantity // 20 != 0:
+            # carry out delivery
 
-            # each chunk is 20
-            if truck.id in stock_map:
-               stock_map[truck.id] = stock_map.get(truck.id) + 20
-            else:
-               stock_map[truck.id] = 20
+            truck.is_active = True
+            order_chunk = 1
 
-            print(f"order {id} - truck {truck.id} - chunck {order_chunk}: delivery time {curr_quantity//20} days")
-            time.sleep(int(curr_quantity)//20)
-            order_chunk += 1
-            curr_quantity -= 20
+            while curr_quantity // 20 != 0:
 
-         print(f"order {id} completed")
-         truck.is_active = False
-         break
-   
+               # each chunk is 20
+               if truck.id in stock_map:
+                  stock_map[truck.id] = stock_map.get(truck.id) + 20
+               else:
+                  stock_map[truck.id] = 20
+
+               print(f"order {order_id} - truck {truck.id} - chunck {order_chunk}: delivery time {curr_quantity//20} days")
+               time.sleep(int(curr_quantity)//20)
+               order_chunk += 1
+               curr_quantity -= 20
+
+
+            for index, order in enumerate(orders):
+               if int(order.id) == int(order_id):
+                  orders.pop(index)
+
+            truck.is_active = False
 
 
 def main():
@@ -122,4 +140,9 @@ if __name__ == '__main__':
       
    # update warehouse stock quantity - truck.id maps to warehouse.id
    update_warehouse_stock(stock_map)
-   
+
+   if len(orders):
+      for order in orders:
+         print(f"order {order.id} not fulfilled")
+   else:
+      print("all orders fulfilled")

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service GetWarehouseService {
+    rpc getStock(StockEmpty) returns (StockInformation) {}
+}
+
+message StockEmpty {
+
+}
+
+message StockInformation {
+    repeated Tuple stockInfo = 1;
+
+    message Tuple {
+        string warehouse_id = 1;
+        string warehouse_stock = 2;    
+    }
+}
