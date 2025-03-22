@@ -16,7 +16,7 @@ class WareHouseServicer(warehouse_pb2_grpc.WarehouseServiceServicer):
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
                 values = line.split()
-                warehouseInfo.append(warehouse_pb2.Location.Tuple(id=values[0], x=values[1], y=values[2], capacity=values[3]))
+                warehouseInfo.append(warehouse_pb2.Location.Tuple(id=values[0], x=values[1], y=values[2], capacity=values[3], coverage=values[4]))
 
         return warehouse_pb2.Location(warehouseInfo=warehouseInfo)
 
@@ -48,10 +48,10 @@ class UpdateStockServicer(updatestock_pb2_grpc.UpdateWarehouseServiceServicer):
                 cur_line = line.split()
                 for k, v in received_dict.items():
                     warehouse_id = line.split()[0]
-                    warehouse_stock = int(line.split()[-1])
+                    warehouse_stock = int(line.split()[-2])
                     if(k == warehouse_id):
                         new_stock = warehouse_stock - int(v)
-                        cur_line[-1] = str(new_stock)
+                        cur_line[-2] = str(new_stock)
                 new_lines.append(cur_line)
 
         with open('./files/warehouse.txt', "w") as f:
@@ -67,7 +67,7 @@ class GetStockServicer(getstock_pb2_grpc.GetWarehouseServiceServicer):
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
                 values = line.split()
-                stockInfo.append(getstock_pb2.StockInformation.Tuple(warehouse_id=values[0], warehouse_stock=values[-1]))
+                stockInfo.append(getstock_pb2.StockInformation.Tuple(warehouse_id=values[0], warehouse_stock=values[-2]))
         
         return getstock_pb2.StockInformation(stockInfo=stockInfo)
         

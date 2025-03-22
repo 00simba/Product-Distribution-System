@@ -12,16 +12,18 @@ class Empty(_message.Message):
 class Location(_message.Message):
     __slots__ = ("warehouseInfo",)
     class Tuple(_message.Message):
-        __slots__ = ("id", "x", "y", "capacity")
+        __slots__ = ("id", "x", "y", "capacity", "coverage")
         ID_FIELD_NUMBER: _ClassVar[int]
         X_FIELD_NUMBER: _ClassVar[int]
         Y_FIELD_NUMBER: _ClassVar[int]
         CAPACITY_FIELD_NUMBER: _ClassVar[int]
+        COVERAGE_FIELD_NUMBER: _ClassVar[int]
         id: str
         x: str
         y: str
         capacity: str
-        def __init__(self, id: _Optional[str] = ..., x: _Optional[str] = ..., y: _Optional[str] = ..., capacity: _Optional[str] = ...) -> None: ...
+        coverage: str
+        def __init__(self, id: _Optional[str] = ..., x: _Optional[str] = ..., y: _Optional[str] = ..., capacity: _Optional[str] = ..., coverage: _Optional[str] = ...) -> None: ...
     WAREHOUSEINFO_FIELD_NUMBER: _ClassVar[int]
     warehouseInfo: _containers.RepeatedCompositeFieldContainer[Location.Tuple]
     def __init__(self, warehouseInfo: _Optional[_Iterable[_Union[Location.Tuple, _Mapping]]] = ...) -> None: ...

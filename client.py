@@ -31,12 +31,14 @@ def calculate_distance(order_x, order_y):
    for warehouse in warehouses:
          warehouse_x = float(warehouse.x)
          warehouse_y = float(warehouse.y)
+         warehouse_coverage = float(warehouse.coverage)
 
          order_x = float(order_x)
          order_y = float(order_y)
 
          distance = math.sqrt((warehouse_x - order_x)**2 + (warehouse_y - order_y)**2)
-         distances.append((int(warehouse.id), distance))
+         if(distance <= warehouse_coverage):
+            distances.append((int(warehouse.id), distance))
 
    distances.sort(key=lambda x:x[1])
    return distances
@@ -88,7 +90,6 @@ def process_order(order_id, x, y, quantity):
          truck = trucks[distance[0] - 1]
          warehouse_id = truck.id    
 
-
          if check_stock(warehouse_id, quantity) == 0:
             visited.add((order_id, warehouse_id))
 
@@ -116,7 +117,6 @@ def process_order(order_id, x, y, quantity):
 
             for index, order in enumerate(orders):
                if int(order.id) == int(order_id):
-                  print(order.id)
                   orders.pop(index)
 
             truck.is_active = False
@@ -135,7 +135,7 @@ def main():
       warehouseStub = warehouse_pb2_grpc.WarehouseServiceStub(channel)
       response = warehouseStub.warehouseInformation(warehouse_pb2.Empty())
       for warehouse in response.warehouseInfo:
-        warehouses.append(Warehouse(warehouse.id, warehouse.x, warehouse.y, warehouse.capacity))
+        warehouses.append(Warehouse(warehouse.id, warehouse.x, warehouse.y, warehouse.capacity, warehouse.coverage))
         # each warehouse will have one truck with a volume of 20 cubic meters
         trucks.append(Truck(warehouse.id, 20, False))
 

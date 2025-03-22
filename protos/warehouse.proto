@@ -16,5 +16,6 @@ message Location {
         string x = 2;
         string y = 3;
         string capacity = 4;
+        string coverage = 5;
     }
 }
