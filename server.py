@@ -3,6 +3,8 @@ import warehouse_pb2
 import warehouse_pb2_grpc
 import order_pb2
 import order_pb2_grpc
+import updatestock_pb2
+import updatestock_pb2_grpc
 from concurrent import futures
 import logging
 
@@ -25,12 +27,43 @@ class OrderServicer(order_pb2_grpc.OrderServiceServicer):
                 orderInfo.append(order_pb2.OrderInformation.Tuple(id=values[0], x=values[1], y=values[2], quantity=values[3]))
 
         return order_pb2.OrderInformation(orderInfo=orderInfo)
+
+class UpdateStockServicer(updatestock_pb2_grpc.UpdateWarehouseServiceServicer):
+    
+    def proto_to_dict(self, hash_map):
+        result = {}
+        for entry in hash_map.entries:
+            result[entry.key] = entry.value
+        return result
+
+    def updateStock(self, request, context):
+        received_dict = self.proto_to_dict(request)
+
+        new_lines = []
+
+        with open("./files/warehouse.txt", "r") as f:  
+            for line in f:
+                cur_line = line.split()
+                for k, v in received_dict.items():
+                    warehouse_id = line.split()[0]
+                    warehouse_stock = int(line.split()[-1])
+                    if(k == warehouse_id):
+                        new_stock = warehouse_stock - int(v)
+                        cur_line[-1] = str(new_stock)
+                new_lines.append(cur_line)
+
+        with open('./files/warehouse.txt', "w") as f:
+            for line in new_lines:
+                f.write(" ".join(line) + "\n")
+                
+        return updatestock_pb2.Response(message="successfully updated warehouse stock")
         
 
 def main():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     warehouse_pb2_grpc.add_WarehouseServiceServicer_to_server(WareHouseServicer(), server)
     order_pb2_grpc.add_OrderServiceServicer_to_server(OrderServicer(), server)
+    updatestock_pb2_grpc.add_UpdateWarehouseServiceServicer_to_server(UpdateStockServicer(), server)
     print("Server Started")
     logging.basicConfig()
     server.add_insecure_port('[::]:50052')

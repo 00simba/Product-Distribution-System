@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service UpdateWarehouseService {
+    rpc updateStock(HashMap) returns (Response);
+}
+
+message MapEntry {
+    string key = 1;
+    string value = 2;
+}
+
+message HashMap {
+    repeated MapEntry entries = 1;
+}
+
+message Response {
+    string message = 1;
+}

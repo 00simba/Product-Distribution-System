@@ -6,6 +6,8 @@ import warehouse_pb2
 import warehouse_pb2_grpc
 import order_pb2
 import order_pb2_grpc
+import updatestock_pb2
+import updatestock_pb2_grpc
 import math
 import time
 import concurrent.futures
@@ -13,6 +15,7 @@ import concurrent.futures
 warehouses = []
 orders = []
 trucks = []
+stock_map = {}
 
 def calculate_distance(order_x, order_y):
    
@@ -33,11 +36,34 @@ def calculate_distance(order_x, order_y):
 
    distances.sort(key=lambda x:x[1])
    return distances
+
+def map_to_proto(map):
+   
+   hash_map = updatestock_pb2.HashMap()
+
+   for k, v in map.items():
+      entry = hash_map.entries.add()
+      entry.key = str(k)
+      entry.value = str(v)
+
+   return hash_map
+
+def update_warehouse_stock(stock_map):
+
+   print("requesting stock update from server...")
+
+   map_proto = map_to_proto(stock_map)
+
+   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+      updateStub = updatestock_pb2_grpc.UpdateWarehouseServiceStub(channel)
+      response = updateStub.updateStock(map_proto)
+      print(f"response from server: {response.message}")
+
    
 def process_order(id, x, y, quantity):
    
    distances = calculate_distance(x, y)
-   print(distances)
+   #print(distances)
 
    curr_quantity = int(quantity)
 
@@ -47,21 +73,27 @@ def process_order(id, x, y, quantity):
          
          truck.is_active = True
 
-         #carry out delivery
+         # carry out delivery
 
          order_chunk = 1
 
          while curr_quantity // 20 != 0:
+
+            # each chunk is 20
+            if truck.id in stock_map:
+               stock_map[truck.id] = stock_map.get(truck.id) + 20
+            else:
+               stock_map[truck.id] = 20
+
             print(f"order {id} - truck {truck.id} - chunck {order_chunk}: delivery time {curr_quantity//20} days")
             time.sleep(int(curr_quantity)//20)
             order_chunk += 1
             curr_quantity -= 20
 
          print(f"order {id} completed")
-
          truck.is_active = False
-
          break
+   
 
 
 def main():
@@ -71,7 +103,7 @@ def main():
       response = warehouseStub.warehouseInformation(warehouse_pb2.Empty())
       for warehouse in response.warehouseInfo:
         warehouses.append(Warehouse(warehouse.id, warehouse.x, warehouse.y, warehouse.capacity))
-        # Each warehouse will have one truck with a volume of 20 cubic meters
+        # each warehouse will have one truck with a volume of 20 cubic meters
         trucks.append(Truck(warehouse.id, 20, False))
 
 
@@ -87,4 +119,7 @@ if __name__ == '__main__':
 
    with concurrent.futures.ThreadPoolExecutor() as executor:
       futures = [executor.submit(process_order, order.id, order.x, order.y, order.quantity) for order in orders]
+      
+   # update warehouse stock quantity - truck.id maps to warehouse.id
+   update_warehouse_stock(stock_map)
    
