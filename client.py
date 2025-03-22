@@ -72,7 +72,7 @@ def check_stock(id, quantity):
          if int(id) == int(stock.warehouse_id) and int(quantity) <= int(stock.warehouse_stock):
             return 1
 
-   return 0
+      return 0
 
    
 def process_order(order_id, x, y, quantity):
@@ -82,20 +82,16 @@ def process_order(order_id, x, y, quantity):
    curr_quantity = int(quantity)
 
    while len(orders):
+
       for distance in distances:
 
          truck = trucks[distance[0] - 1]
          warehouse_id = truck.id    
 
-         if check_stock(warehouse_id, quantity) == 0 and (order_id, warehouse_id) in visited:
-            for index, order in enumerate(orders):
-               if int(order.id) == int(order_id):
-                  orders.pop(index)
-                  unfulfilled.append(order)
-
 
          if check_stock(warehouse_id, quantity) == 0:
             visited.add((order_id, warehouse_id))
+
 
          if not (truck.is_active) and check_stock(warehouse_id, quantity):
 
@@ -120,9 +116,17 @@ def process_order(order_id, x, y, quantity):
 
             for index, order in enumerate(orders):
                if int(order.id) == int(order_id):
+                  print(order.id)
                   orders.pop(index)
 
             truck.is_active = False
+
+      if check_stock(warehouse_id, order_id) == 0 and (order_id, warehouse_id) in visited:
+         for index, order in enumerate(orders):
+               if int(order.id) == int(order_id):
+                  unfulfilled.append(order)
+                  orders.pop(index)
+
 
 
 def main():
@@ -157,3 +161,4 @@ if __name__ == '__main__':
          print(f"order {order.id} not fulfilled")
    else:
       print("all orders fulfilled")
+
