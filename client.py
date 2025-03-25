@@ -109,7 +109,7 @@ def process_order(order_id, x, y, quantity):
                else:
                   stock_map[truck.id] = 20
 
-               print(f"order {order_id} - truck {truck.id} - chunck {order_chunk}: delivery time {curr_quantity//20} days")
+               print(f"order {order_id} - truck {truck.id} - chunk {order_chunk}: delivery time {curr_quantity//20} days")
                time.sleep(int(curr_quantity)//20)
                order_chunk += 1
                curr_quantity -= 20
@@ -131,7 +131,7 @@ def process_order(order_id, x, y, quantity):
 
 def main():
 
-   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+   with grpc.insecure_channel('localhost:50052') as channel:
       warehouseStub = warehouse_pb2_grpc.WarehouseServiceStub(channel)
       response = warehouseStub.warehouseInformation(warehouse_pb2.Empty())
       for warehouse in response.warehouseInfo:
