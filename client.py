@@ -60,14 +60,14 @@ def update_warehouse_stock(stock_map):
 
    map_proto = map_to_proto(stock_map)
 
-   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+   with grpc.insecure_channel('localhost:50052') as channel:
       updateStub = updatestock_pb2_grpc.UpdateWarehouseServiceStub(channel)
       response = updateStub.updateStock(map_proto)
       print(f"response from server: {response.message}")
 
 def check_stock(id, quantity):
 
-   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+   with grpc.insecure_channel('localhost:50052') as channel:
       stockStub = getstock_pb2_grpc.GetWarehouseServiceStub(channel)
       response = stockStub.getStock(getstock_pb2.StockEmpty())
       for stock in response.stockInfo:
@@ -131,7 +131,7 @@ def process_order(order_id, x, y, quantity):
 
 def main():
 
-   with grpc.insecure_channel('0.0.0.0:50052') as channel:
+   with grpc.insecure_channel('localhost:50052') as channel:
       warehouseStub = warehouse_pb2_grpc.WarehouseServiceStub(channel)
       response = warehouseStub.warehouseInformation(warehouse_pb2.Empty())
       for warehouse in response.warehouseInfo:
