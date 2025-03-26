@@ -1,89 +1,127 @@
-import grpc
-import warehouse_pb2
-import warehouse_pb2_grpc
-import order_pb2
-import order_pb2_grpc
-import updatestock_pb2
-import updatestock_pb2_grpc
-import getstock_pb2
-import getstock_pb2_grpc
-from concurrent import futures
+from flask import Flask, request, jsonify
+import json
+from rabbitmq_config import setup_exchange_and_queue, publish_stock_update
 import logging
 
-class WareHouseServicer(warehouse_pb2_grpc.WarehouseServiceServicer):
-    def warehouseInformation(self, request, context):
-        warehouseInfo = []
+app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def read_warehouse_data():
+    warehouse_info = []
+    with open("./files/warehouse.txt", "r") as f:
+        for line in f:
+            values = line.split()
+            warehouse_info.append({
+                "id": values[0],
+                "x": values[1],
+                "y": values[2],
+                "capacity": values[3],
+                "coverage": values[4],
+                "stock": values[-2]
+            })
+    return warehouse_info
+
+def read_order_data():
+    order_info = []
+    with open("./files/orders.txt", "r") as f:
+        for line in f:
+            values = line.split()
+            order_info.append({
+                "id": values[0],
+                "x": values[1],
+                "y": values[2],
+                "quantity": values[3]
+            })
+    return order_info
+
+@app.route('/warehouse/info', methods=['GET'])
+def get_warehouse_info():
+    try:
+        warehouse_info = read_warehouse_data()
+        return jsonify({"warehouses": warehouse_info})
+    except Exception as e:
+        logger.error(f"Error reading warehouse info: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/order/info', methods=['GET'])
+def get_order_info():
+    try:
+        order_info = read_order_data()
+        return jsonify({"orders": order_info})
+    except Exception as e:
+        logger.error(f"Error reading order info: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/stock/update', methods=['POST'])
+def update_stock():
+    try:
+        data = request.get_json()
+        if not data or 'updates' not in data:
+            return jsonify({"error": "Invalid request format"}), 400
+
+        updates = data['updates']
+        new_lines = []
+        failed_updates = []
+
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
-                values = line.split()
-                warehouseInfo.append(warehouse_pb2.Location.Tuple(id=values[0], x=values[1], y=values[2], capacity=values[3], coverage=values[4]))
-
-        return warehouse_pb2.Location(warehouseInfo=warehouseInfo)
-
-class OrderServicer(order_pb2_grpc.OrderServiceServicer):
-    def orderInformation(self, request, context):
-        orderInfo = []
-        with open("./files/orders.txt", "r") as f:
-            for line in f:
-                values = line.split()
-                orderInfo.append(order_pb2.OrderInformation.Tuple(id=values[0], x=values[1], y=values[2], quantity=values[3]))
-
-        return order_pb2.OrderInformation(orderInfo=orderInfo)
-
-class UpdateStockServicer(updatestock_pb2_grpc.UpdateWarehouseServiceServicer):
-    
-    def proto_to_dict(self, hash_map):
-        result = {}
-        for entry in hash_map.entries:
-            result[entry.key] = entry.value
-        return result
-
-    def updateStock(self, request, context):
-        received_dict = self.proto_to_dict(request)
-
-        new_lines = []
-
-        with open("./files/warehouse.txt", "r") as f:  
-            for line in f:
                 cur_line = line.split()
-                for k, v in received_dict.items():
-                    warehouse_id = line.split()[0]
-                    warehouse_stock = int(line.split()[-2])
-                    if(k == warehouse_id):
-                        new_stock = warehouse_stock - int(v)
+                warehouse_id = cur_line[0]
+                if warehouse_id in updates:
+                    old_stock = int(cur_line[-2])
+                    update_amount = int(updates[warehouse_id])
+                    
+                    # Calculate new stock and ensure it doesn't go below 0
+                    new_stock = max(0, old_stock - update_amount)
+                    
+                    # Only update if we have sufficient stock
+                    if old_stock >= update_amount:
                         cur_line[-2] = str(new_stock)
+                        # Publish stock update to RabbitMQ
+                        publish_stock_update(warehouse_id, old_stock, new_stock)
+                        logger.info(f"Updated warehouse {warehouse_id}: {old_stock} -> {new_stock}")
+                    else:
+                        failed_updates.append({
+                            "warehouse_id": warehouse_id,
+                            "requested": update_amount,
+                            "available": old_stock
+                        })
+                        logger.warning(f"Insufficient stock in warehouse {warehouse_id}: {old_stock} < {update_amount}")
                 new_lines.append(cur_line)
 
         with open('./files/warehouse.txt', "w") as f:
             for line in new_lines:
                 f.write(" ".join(line) + "\n")
-                
-        return updatestock_pb2.Response(message="successfully updated warehouse stock")
-    
-class GetStockServicer(getstock_pb2_grpc.GetWarehouseServiceServicer):
 
-    def getStock(self, request, context):
-        stockInfo = []
+        response = {
+            "message": "Successfully updated warehouse stock",
+            "failed_updates": failed_updates
+        }
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Error updating stock: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/stock/info', methods=['GET'])
+def get_stock_info():
+    try:
+        stock_info = []
         with open("./files/warehouse.txt", "r") as f:
             for line in f:
                 values = line.split()
-                stockInfo.append(getstock_pb2.StockInformation.Tuple(warehouse_id=values[0], warehouse_stock=values[-2]))
-        
-        return getstock_pb2.StockInformation(stockInfo=stockInfo)
-        
-
-def main():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    warehouse_pb2_grpc.add_WarehouseServiceServicer_to_server(WareHouseServicer(), server)
-    order_pb2_grpc.add_OrderServiceServicer_to_server(OrderServicer(), server)
-    updatestock_pb2_grpc.add_UpdateWarehouseServiceServicer_to_server(UpdateStockServicer(), server)
-    getstock_pb2_grpc.add_GetWarehouseServiceServicer_to_server(GetStockServicer(), server)
-    print("Server Started")
-    logging.basicConfig()
-    server.add_insecure_port('[::]:50052')
-    server.start()
-    server.wait_for_termination()
+                stock_info.append({
+                    "warehouse_id": values[0],
+                    "warehouse_stock": values[-2]
+                })
+        return jsonify({"stock_info": stock_info})
+    except Exception as e:
+        logger.error(f"Error reading stock info: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
+    # Setup RabbitMQ exchange and queue
+    setup_exchange_and_queue()
     
-    main()
+    # Start the Flask server
+    app.run(host='0.0.0.0', port=50052)
